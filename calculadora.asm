@@ -1,13 +1,15 @@
 # ------------------------------------------------------------------
 # AUTOR: Vagner Montenegro de Melo
-# DATA: 01/12 - 21:46
-# DATA: 01/12 - 22:23
+# DATA: 01/12 - 21:46 - Primeira questao
+# DATA: 01/12 - 22:23 - Segunda questao
+# DATA: 01/12 - 23:15 -terceira questao
 # PROJETO: Calculadora Programador Didática - Infra de Hardware
 # ------------------------------------------------------------------
 
 .data
-    menu_msg:       .asciiz "\n\n--- MENU ---\n1 - Base 10 para Base 2 (Binario)\n2 - Base 10 para Base 8 (Octal)\n3 - Base 10 para Base 16 (Hex)\n4 - Base 10 para BCD\n5 - Base 10 para 16 bits com Sinal (Comp. 2)\n0 - Sair\nEscolha: "
+    menu_msg:       .asciiz "\n\n--- MENU ---\n1 - Base 10 para Base 2 (Binario)\n2 - Base 10 para Base 8 (Octal)\n3 - Base 10 para Base 16 (Hex)\n4 - Base 10 para BCD\n5 - Base 10 para 16 bits com Sinal (Comp. 2)\n6 - Analise de Float e Double (IEEE 754)\n0 - Sair\nEscolha: "
     msg_input:      .asciiz "\nDigite o numero Decimal (Inteiro): "
+    msg_input_float:.asciiz "\nDigite o numero Real (ex: 10.5): "
     msg_result:     .asciiz "\nResultado Final: "
     
     msg_step:       .asciiz "\nPasso: "
@@ -17,6 +19,13 @@
     msg_close:      .asciiz "]"
     msg_bcd_step:   .asciiz "\nDigito Decimal: "
     msg_bcd_arrow:  .asciiz " -> Em Binario (4 bits): "
+
+    title_float:    .asciiz "\n\n--- ANALISE FLOAT (32 BITS) ---"
+    title_double:   .asciiz "\n\n--- ANALISE DOUBLE (64 BITS) ---"
+    str_sinal:      .asciiz "\nSinal (1 bit): "
+    str_exp_bin:    .asciiz "\nExpoente (Bits): "
+    str_exp_dec:    .asciiz "\nExpoente (Com Vies/Decimal): "
+    str_mant:       .asciiz "\nMantissa (Fracao): "
     
 .text
 .globl main
@@ -36,6 +45,7 @@ main:
     beq $s0, 3, case_hex
     beq $s0, 4, case_bcd
     beq $s0, 5, case_signed
+    beq $s0, 6, case_float
     
     j main
 
@@ -257,6 +267,121 @@ print_one:
 next_bit:
     subi $t1, $t1, 1
     j loop_print_bits
+
+# ---------------------------------------------------------
+# QUESTÃO 3 - ANALISE IEEE 754 (FLOAT E DOUBLE)
+# ---------------------------------------------------------
+case_float:
+    li $v0, 4
+    la $a0, msg_input_float
+    syscall
+    
+
+    li $v0, 6
+    syscall
+    
+    li $v0, 4
+    la $a0, title_float
+    syscall
+    
+    mfc1 $t0, $f0      
+    
+    # 1. SINAL (Bit 31)
+    li $v0, 4
+    la $a0, str_sinal
+    syscall
+    srl $a0, $t0, 31   
+    li $v0, 1
+    syscall
+    
+    # 2. EXPOENTE (Bits 30-23)
+    li $v0, 4
+    la $a0, str_exp_bin
+    syscall
+    sll $t1, $t0, 1 
+    srl $t1, $t1, 24   
+    
+    move $a0, $t1
+    li $v0, 35
+    syscall
+    
+    li $v0, 4
+    la $a0, str_exp_dec
+    syscall
+    move $a0, $t1
+    li $v0, 1
+    syscall
+    
+
+    li $v0, 4
+    la $a0, str_mant
+    syscall
+    sll $t1, $t0, 9   
+    srl $t1, $t1, 9    
+    
+    move $a0, $t1  
+    li $v0, 35
+    syscall
+    
+    # ------------------
+    # ANALISE DOUBLE (64 BITS)
+    # ------------------
+    li $v0, 4
+    la $a0, title_double
+    syscall
+    
+
+    cvt.d.s $f2, $f0
+    
+
+
+    mfc1 $t2, $f3   
+    mfc1 $t3, $f2      
+    
+
+    li $v0, 4
+    la $a0, str_sinal
+    syscall
+    srl $a0, $t2, 31
+    li $v0, 1
+    syscall
+    
+
+    li $v0, 4
+    la $a0, str_exp_bin
+    syscall
+    sll $t1, $t2, 1    
+    srl $t1, $t1, 21   
+    
+    move $a0, $t1  
+    li $v0, 35
+    syscall
+    
+    li $v0, 4
+    la $a0, str_exp_dec
+    syscall
+    move $a0, $t1     
+    li $v0, 1
+    syscall
+    
+
+    li $v0, 4
+    la $a0, str_mant
+    syscall
+    
+
+    sll $t1, $t2, 12
+    srl $t1, $t1, 12
+    move $a0, $t1
+    li $v0, 35
+    syscall
+    
+
+    move $a0, $t3
+    li $v0, 35
+    syscall
+
+    j return_main
 
 # ---------------------------------------------------------
 # FUNCOES AUXILIARES
