@@ -1,11 +1,12 @@
 # ------------------------------------------------------------------
 # AUTOR: Vagner Montenegro de Melo
 # DATA: 01/12 - 21:46
+# DATA: 01/12 - 22:23
 # PROJETO: Calculadora Programador Didática - Infra de Hardware
 # ------------------------------------------------------------------
 
 .data
-    menu_msg:       .asciiz "\n\n--- MENU QUESTAO 1 ---\n1 - Base 10 para Base 2 (Binario)\n2 - Base 10 para Base 8 (Octal)\n3 - Base 10 para Base 16 (Hex)\n4 - Base 10 para BCD\n0 - Sair\nEscolha: "
+    menu_msg:       .asciiz "\n\n--- MENU ---\n1 - Base 10 para Base 2 (Binario)\n2 - Base 10 para Base 8 (Octal)\n3 - Base 10 para Base 16 (Hex)\n4 - Base 10 para BCD\n5 - Base 10 para 16 bits com Sinal (Comp. 2)\n0 - Sair\nEscolha: "
     msg_input:      .asciiz "\nDigite o numero Decimal (Inteiro): "
     msg_result:     .asciiz "\nResultado Final: "
     
@@ -34,6 +35,7 @@ main:
     beq $s0, 2, case_oct
     beq $s0, 3, case_hex
     beq $s0, 4, case_bcd
+    beq $s0, 5, case_signed
     
     j main
 
@@ -216,6 +218,45 @@ pop_bcd_loop:
     
     subi $t3, $t3, 1
     j pop_bcd_loop
+
+# ---------------------------------------------------------
+# QUESTÃO 2 - BASE 10 PARA 16 BITS COM SINAL (COMPLEMENTO A 2)
+# ---------------------------------------------------------
+case_signed:
+    li $v0, 4
+    la $a0, msg_input
+    syscall
+    li $v0, 5
+    syscall
+    move $t0, $v0
+
+    li $v0, 4
+    la $a0, msg_result
+    syscall
+
+    li $t1, 15
+loop_print_bits:
+    blt $t1, 0, return_main
+    
+    li $t2, 1
+    sllv $t2, $t2, $t1
+    and $t3, $t0, $t2
+    
+    bnez $t3, print_one
+    
+    li $a0, 0
+    li $v0, 1
+    syscall
+    j next_bit
+
+print_one:
+    li $a0, 1
+    li $v0, 1
+    syscall
+
+next_bit:
+    subi $t1, $t1, 1
+    j loop_print_bits
 
 # ---------------------------------------------------------
 # FUNCOES AUXILIARES
